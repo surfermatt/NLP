@@ -5,12 +5,36 @@ import torch
 import numpy as np
 import pandas as pd
 
+import os
+import requests
+import zipfile
+
+def download_and_unpack_model():
+    model_url = "https://vh297-fm.sweb.ru/files/surfermatt_ru/ML/projectNLP/models/rut5_model"
+    model_dir = "models/rut5_model"
+
+    if not os.path.exists(model_dir):
+        print("📥 Загружаем модель...")
+        r = requests.get(model_url)
+        with open("rut5_model.zip", "wb") as f:
+            f.write(r.content)
+        with zipfile.ZipFile("rut5_model.zip", 'r') as zip_ref:
+            zip_ref.extractall("models")
+        os.remove("rut5_model.zip")
+        print("✅ Модель загружена и распакована.")
+
+download_and_unpack_model()
+
 app = Flask(__name__)
+
+download_and_unpack_model()
+tokenizer = T5Tokenizer.from_pretrained("models/rut5_model")
+generator = T5ForConditionalGeneration.from_pretrained("models/rut5_model")
 
 # Загрузка моделей
 retriever = SentenceTransformer('models/sentence_model')
-generator = T5ForConditionalGeneration.from_pretrained('models/rut5_model')
-tokenizer = T5Tokenizer.from_pretrained('models/rut5_model')
+#generator = T5ForConditionalGeneration.from_pretrained('models/rut5_model')
+#tokenizer = T5Tokenizer.from_pretrained('models/rut5_model')
 
 # Загрузка текстов и эмбеддингов
 corpus = pd.read_csv('models/journal_texts.csv')['description'].tolist()
